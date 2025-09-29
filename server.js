@@ -1,32 +1,46 @@
-/*
-  Vulnerable example server (for lab)
-  - intentionally contains hardcoded "secrets" and debug routes
-  - use only for educational local lab
-*/
+// server.js (fixed)
+require('dotenv').config();
 const express = require('express');
 const fs = require('fs');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// --- BAD: hardcoded secrets (only demo, do not use real keys) ---
-const API_KEY = "super-secret-api-key-12345";
-const DB_PASSWORD = "P@s5w0rd_demo";
+// Secrets from env (not hardcoded!)
+const API_KEY = process.env.API_KEY || 'not-set';
+const DB_PASSWORD = process.env.DB_PASSWORD || 'not-set';
 
-// config.json (we will create it and commit it initially for lab)
-const config = JSON.parse(fs.readFileSync('./config.json', 'utf8'));
+// Example config structure
+let configExample = {};
+try {
+  configExample = JSON.parse(fs.readFileSync('./config.example.json', 'utf8'));
+} catch (e) {}
 
+// Root route
 app.get('/', (req, res) => {
-  res.send('Hello — vulnerable server');
+  res.send('Hello — fixed server');
 });
 
-// DEBUG: exposes config (contains secrets) --- intentionally vulnerable
+// Safe debug route (no secrets)
 app.get('/debug/config', (req, res) => {
-  res.json(config);
+  res.json({
+    message: "Config not exposed. See config.example.json for structure.",
+    configExample: configExample
+  });
 });
 
-// cause an error to show stack trace
-app.get('/cause-error', (req, res) => {
-  throw new Error("Simulated internal error: DB password is " + DB_PASSWORD);
+// Error simulation
+app.get('/cause-error', (req, res, next) => {
+  try {
+    throw new Error("Simulated internal error");
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Centralized error handler
+app.use((err, req, res, next) => {
+  console.error("ERROR:", err.message, err.stack);
+  res.status(500).json({ error: "Internal Server Error" });
 });
 
 app.listen(PORT, () => {
