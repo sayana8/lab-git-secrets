@@ -1,0 +1,11 @@
+{
+  "db": {
+    "host": "localhost",
+    "user": "appuser",
+    "password": "<SET_VIA_ENV>"
+  },
+  "thirdParty": {
+    "stripeKey": "<SET_VIA_ENV>",
+    "someApiToken": "<SET_VIA_ENV>"
+  }
+}
